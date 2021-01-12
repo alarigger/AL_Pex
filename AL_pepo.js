@@ -1,6 +1,23 @@
 
 function AL_Pepo(){
 	
+	
+	/*TODO : 
+	
+		change algo for exposure : 
+		
+		make a simple loop 
+		distance = last point - current point 
+		if( distance >= range) 
+		{
+				upladte last point 
+				sub_index ++ (loop) 
+				
+		}
+	
+	
+	*/
+	
 	/*
 	VARIABLES 
 	*/
@@ -15,7 +32,8 @@ function AL_Pepo(){
 	
 	MessageLog.trace(all_script_nodes);
 	
-	var first_values = [];
+	var last_value = [];
+	var last_index = [];
 	
 	/*
 	EXCUTION
@@ -90,45 +108,68 @@ function AL_Pepo(){
 				
 				var i1 = node.getTextAttr(current_node,active_frame,'input_1');
 				var i2 = node.getTextAttr(current_node,active_frame,'input_2');
-				
-				if(active_frame == frame_start){
-					
-					first_values[n] = i1;
-					
-				}
-				
-				var distance = i1-first_values[n];
-				
 				var sensitivity = node.getTextAttr(current_node,active_frame,'sensitivity');
 				var exposure = node.getTextAttr(current_node,active_frame,'exposure');
-
-				//MessageLog.trace("sensitivity : "+sensitivity);
 				
-				//MessageLog.trace("exposure : "+exposure);
-
 				var currentColumn = get_read_timing_column(output_read);
 				
 				var sub_timing = column.getDrawingTimings(currentColumn);
 				
-				var last_sub = column.getEntry (currentColumn,1,active_frame-1)
+				var number_of_subs = sub_timing.length;
 				
-				var last_index = sub_timing.indexOf(last_sub);
+				var current_sub = column.getEntry (currentColumn,1,active_frame-1);
 				
-				var sub_index = last_index;
+				var current_index = sub_timing.indexOf(current_sub);	
 				
-				//MessageLog.trace(last_sub);
+				var sub_index= current_index ;
 				
-				//the exposure need some improvements 
+				var final_sensitivity = 1/sensitivity;
 				
-				if((active_frame-1) % exposure == 0){
+				if(active_frame == frame_start){
 					
-					var number_of_subs = sub_timing.length;
+					last_value[n] = i1;
 					
-					var final_range = sensitivity*general_sensitivity;
+					sub_index= 0;
 					
-					sub_index =calculate_index_mono_input(distance,final_range,number_of_subs,"mod");
+				}else{
+					
+					var distance = i1-last_value[n];
+					
+					MessageLog.trace("DISTANCE "+distance);
 
+					if(distance > final_sensitivity && ((active_frame % exposure) == 0 )){
+						
+						var next_index = current_index+1;
+						
+						if(next_index<number_of_subs){
+							
+							sub_index=next_index;
+	
+							
+						}else{
+							
+							sub_index=0;
+			
+							
+						}
+						
+						last_value[n]= i1;
+
+						
+					}else{
+						
+						sub_index=current_index 
+						
+					}
+
+
+					
+						
+					
 				}
+				
+
+				
 				
 				MessageLog.trace("SUB INDEX "+sub_index);
 				
