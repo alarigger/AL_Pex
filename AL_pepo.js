@@ -15,6 +15,8 @@ function AL_Pepo(){
 	
 	MessageLog.trace(all_script_nodes);
 	
+	var first_values = [];
+	
 	/*
 	EXCUTION
 	*/	
@@ -73,15 +75,15 @@ function AL_Pepo(){
 	
 		for(var n = 0 ; n < node_list.length ; n++){
 				
-				var current_node = node_list[n];
+			var current_node = node_list[n];
 				
 			if(node.getEnable(current_node)){
 				
 				//var input_peg = get_input_peg(current_node);
 				var output_read =  get_output_read(current_node);
-				
+							
 				//MessageLog.trace(input_peg);
-				MessageLog.trace(output_read);
+				//MessageLog.trace(output_read);
 				
 				//var X = node.getTextAttr(input_peg,active_frame,'POSITION.X');
 				//var Y = node.getTextAttr(input_peg,active_frame,'POSITION.Y');
@@ -89,36 +91,46 @@ function AL_Pepo(){
 				var i1 = node.getTextAttr(current_node,active_frame,'input_1');
 				var i2 = node.getTextAttr(current_node,active_frame,'input_2');
 				
+				if(active_frame == frame_start){
+					
+					first_values[n] = i1;
+					
+				}
+				
+				var distance = i1-first_values[n];
+				
 				var sensitivity = node.getTextAttr(current_node,active_frame,'sensitivity');
 				var exposure = node.getTextAttr(current_node,active_frame,'exposure');
+
+				//MessageLog.trace("sensitivity : "+sensitivity);
 				
-				var final_range = 1/(sensitivity*general_sensitivity);
-				
-				MessageLog.trace("sensitivity : "+sensitivity);
-				
-				MessageLog.trace("exposure : "+exposure);
+				//MessageLog.trace("exposure : "+exposure);
 
 				var currentColumn = get_read_timing_column(output_read);
+				
 				var sub_timing = column.getDrawingTimings(currentColumn);
-				var number_of_subs = sub_timing.length;
-			
+				
 				var last_sub = column.getEntry (currentColumn,1,active_frame-1)
 				
 				var last_index = sub_timing.indexOf(last_sub);
 				
 				var sub_index = last_index;
 				
-				MessageLog.trace(last_sub);
+				//MessageLog.trace(last_sub);
 				
-				MessageLog.trace(sub_index);
+				//the exposure need some improvements 
 				
 				if((active_frame-1) % exposure == 0){
 					
-					sub_index =calculate_index_mono_input(i1,final_range,number_of_subs,"mod");
+					var number_of_subs = sub_timing.length;
 					
+					var final_range = sensitivity*general_sensitivity;
 					
-					
+					sub_index =calculate_index_mono_input(distance,final_range,number_of_subs,"mod");
+
 				}
+				
+				MessageLog.trace("SUB INDEX "+sub_index);
 				
 				var SELECTED_SUB = sub_timing[sub_index];
 				
@@ -141,19 +153,29 @@ function AL_Pepo(){
 	function calculate_index_mono_input(value,range,scope,type){
 		
 		function remove_sign(n){
+			
 			return Math.sqrt(n*n);
+			
 		}	
+		
 		if(type == "mod"){
-			return remove_sign(value%((scope-1)*range));
+			
+			//return remove_sign(Math.round(value%((scope-1)/range)));
+			
+			var flat_value = Math.round(value*range);
+			
+			return remove_sign(flat_value%(scope-1));
 
 		}
 		
 		
 		if(type == "cos"){
+			
 			return remove_sign(Math.round(Math.cos(value/range)*(scope-1)));
 		}
 		
 		if(type == 'sin'){
+			
 			return remove_sign(Math.round(Math.sin(value/range)*(scope-1)));
 		}
 		
