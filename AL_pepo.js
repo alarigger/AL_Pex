@@ -4,7 +4,7 @@ function AL_Pepo(){
 	
 	/*TODO : 
 	
-		change algo for exposure : 
+		change algo for EXPOSURE : 
 		
 		make a simple loop 
 		distance = last point - current point 
@@ -29,6 +29,7 @@ function AL_Pepo(){
 	var current_frame = frame.current()
 	
 	var GENERAL_SENSITIVITY = 1;
+	var ANIMATION_TYPE = "random";
 	
 	MessageLog.trace(all_script_nodes);
 	
@@ -88,8 +89,13 @@ function AL_Pepo(){
 	
 	// find first parent peg. 
 	
+	/*
 	
-	function treat_pepos(node_list,active_frame,general_sensitivity){
+	add randomness
+	*/
+	
+	
+	function treat_pepos(node_list,active_frame,general_SENSITIVITY){
 	
 		for(var n = 0 ; n < node_list.length ; n++){
 				
@@ -106,10 +112,11 @@ function AL_Pepo(){
 				//var X = node.getTextAttr(input_peg,active_frame,'POSITION.X');
 				//var Y = node.getTextAttr(input_peg,active_frame,'POSITION.Y');
 				
-				var i1 = node.getTextAttr(current_node,active_frame,'input_1');
-				var i2 = node.getTextAttr(current_node,active_frame,'input_2');
-				var sensitivity = node.getTextAttr(current_node,active_frame,'sensitivity');
-				var exposure = node.getTextAttr(current_node,active_frame,'exposure');
+				var INPUT1 = node.getTextAttr(current_node,active_frame,'input_1');
+				var INPUT2 = node.getTextAttr(current_node,active_frame,'input_2');
+				var SENSITIVITY = node.getTextAttr(current_node,active_frame,'sensitivity');
+				var EXPOSURE = node.getTextAttr(current_node,active_frame,'exposure');
+				var ANIMATION_TYPE = node.getTextAttr(current_node,active_frame,'animation_type');
 				
 				var currentColumn = get_read_timing_column(output_read);
 				
@@ -123,37 +130,78 @@ function AL_Pepo(){
 				
 				var sub_index= current_index ;
 				
-				var final_sensitivity = 1/sensitivity;
+				var final_SENSITIVITY = 1/SENSITIVITY;
+				
+				var current_point = {x:INPUT1,y:INPUT2};
+				
+
 				
 				if(active_frame == frame_start){
 					
-					last_value[n] = i1;
+					last_value[n] = current_point;
 					
 					sub_index= 0;
 					
 				}else{
 					
-					var distance = i1-last_value[n];
+				MessageLog.trace(current_point.x);
+				MessageLog.trace(current_point.y);
+				MessageLog.trace(last_value[n].x);
+				MessageLog.trace(last_value[n].y);
+				
+
+					
+					var dx = current_point.x-last_value[n].x;
+					var dy = current_point.y-last_value[n].y;
+					
+					MessageLog.trace(dx);
+					MessageLog.trace(dy);
+					
+					var distance = Math.sqrt((dx*dx)+(dy*dy));
 					
 					MessageLog.trace("DISTANCE "+distance);
-
-					if(distance > final_sensitivity && ((active_frame % exposure) == 0 )){
-						
-						var next_index = current_index+1;
-						
-						if(next_index<number_of_subs){
+					
+						switch(ANIMATION_TYPE){
+								
+							case ('loop'):
 							
-							sub_index=next_index;
-	
-							
-						}else{
-							
-							sub_index=0;
+								var next_index = current_index+1;
+								
+								if(next_index<number_of_subs){
+									
 			
+									sub_index=next_index;
+			
+									
+								}else{
+									
+									sub_index=0;
+					
+									
+								}
+										
+								break;
+								
+							case ('random'):
 							
+								var random_pool = [];
+								
+								for(var r= 0; r<number_of_subs-1;r++){
+									if(r!=current_index){
+										random_pool.push(r);
+									}
+								}
+								
+								sub_index =  random_pool[Math.floor(Math.random() * random_pool.length)];
+									
+									
+							break;
+								
 						}
-						
-						last_value[n]= i1;
+
+					if(distance > final_SENSITIVITY && (((active_frame-1) % EXPOSURE) == 0 )){
+
+						last_value[n]= current_point;
 
 						
 					}else{
@@ -231,12 +279,6 @@ function AL_Pepo(){
 			treat_pepos(node_list,i,range);
 			
 		}
-		
-	}
-	
-	function clear_timeline(){
-		
-		
 		
 	}
 	
@@ -354,20 +396,21 @@ function AL_Pepo(){
 /*
 SCRIPT MODULE ATTRIBUTES 
 
-
 <specs>
   <ports>
     <in type="PEG"/>
     <out type="IMAGE"/>
   </ports>
   <attributes>
+<attr type="bool" name="isPepo" value="true"/> 
 <attr type="double" name="input_1" value="0"/> 
 <attr type="double" name="input_2" value="0"/> 
-<attr type="bool" name="isFupo" value="true"/> 
-<attr type="int" name="sensitivity" value="10"/> 
+<attr type="double" name="sensitivity" value="10"/> 
 <attr type="int" name="exposure" value="1"/> 
+<attr type="Text" name="animation_type" value="loop"/> 
   </attributes>
 </specs>
+
 
 
 
