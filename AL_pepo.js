@@ -56,79 +56,98 @@ function AL_Pepo(){
 		
 	}
 	
+	//ajouter condition if peg connected
+	
+	//deux comportements inputs based and peg based
+	
+	//get the absolute movement of the peg. 
+	
+	// check box : absolute mouvement 
+	
+	// find first child read 
+	
+	// find first parent peg. 
+	
 	
 	function treat_pepos(node_list,active_frame,general_sensitivity){
 	
 		for(var n = 0 ; n < node_list.length ; n++){
-			
-			var current_node = node_list[n];
-			
-			var input_peg = get_input_peg(current_node);
-			var output_read =  get_output_read(current_node);
-			
-			//MessageLog.trace(input_peg);
-			//MessageLog.trace(output_read);
-			
-			var X = node.getTextAttr(input_peg,active_frame,'POSITION.X');
-			var Y = node.getTextAttr(input_peg,active_frame,'POSITION.Y');
-			
-			var sensitivity = node.getTextAttr(current_node,active_frame,'sensitivity');
-			var exposure = node.getTextAttr(current_node,active_frame,'exposure');
-			
-			var final_range = 1/(sensitivity*general_sensitivity);
-			
-		
-			
-			MessageLog.trace("sensitivity : "+sensitivity);
-			MessageLog.trace("exposure : "+exposure);
-
-			var currentColumn = get_read_timing_column(output_read);
-			var sub_timing = column.getDrawingTimings(currentColumn);
-			var number_of_subs = sub_timing.length;
-		
-			var last_sub = column.getEntry (currentColumn,1,active_frame-1)
-			
-			var last_index = sub_timing.indexOf(last_sub);
-			
-			var sub_index = last_index;
-			
-			MessageLog.trace(last_sub);
-			
-			MessageLog.trace(sub_index);
-			
-
-
-			if((active_frame-1) % exposure == 0){
 				
-				sub_index =calculate_index(X,final_range,number_of_subs,"cos");
+				var current_node = node_list[n];
+				
+			if(node.getEnable(current_node)){
+				
+				//var input_peg = get_input_peg(current_node);
+				var output_read =  get_output_read(current_node);
+				
+				//MessageLog.trace(input_peg);
+				MessageLog.trace(output_read);
+				
+				//var X = node.getTextAttr(input_peg,active_frame,'POSITION.X');
+				//var Y = node.getTextAttr(input_peg,active_frame,'POSITION.Y');
+				
+				var i1 = node.getTextAttr(current_node,active_frame,'input_1');
+				var i2 = node.getTextAttr(current_node,active_frame,'input_2');
+				
+				var sensitivity = node.getTextAttr(current_node,active_frame,'sensitivity');
+				var exposure = node.getTextAttr(current_node,active_frame,'exposure');
+				
+				var final_range = 1/(sensitivity*general_sensitivity);
+				
+				MessageLog.trace("sensitivity : "+sensitivity);
+				
+				MessageLog.trace("exposure : "+exposure);
+
+				var currentColumn = get_read_timing_column(output_read);
+				var sub_timing = column.getDrawingTimings(currentColumn);
+				var number_of_subs = sub_timing.length;
+			
+				var last_sub = column.getEntry (currentColumn,1,active_frame-1)
+				
+				var last_index = sub_timing.indexOf(last_sub);
+				
+				var sub_index = last_index;
+				
+				MessageLog.trace(last_sub);
+				
+				MessageLog.trace(sub_index);
+				
+				if((active_frame-1) % exposure == 0){
+					
+					sub_index =calculate_index_mono_input(i1,final_range,number_of_subs,"mod");
+					
+					
+					
+				}
+				
+				var SELECTED_SUB = sub_timing[sub_index];
+				
+				column.setEntry(currentColumn,1,active_frame,SELECTED_SUB);	
 				
 			}
-			
-			if(active_frame == 1){
-				
-				sub_index = 1;
-				
-			}
-			
-			var SELECTED_SUB = sub_timing[sub_index];
-			
-			
-			
-
-			
-			column.setEntry(currentColumn,1,active_frame,SELECTED_SUB);	
 
 		}
 		
 	}
 	
+	
+	function calculate_index_stereo_input(value1,value2,range,scope){
+		
+		
+		
+	}
 
 	
-	function calculate_index(value,range,scope,type){
+	function calculate_index_mono_input(value,range,scope,type){
 		
 		function remove_sign(n){
 			return Math.sqrt(n*n);
 		}	
+		if(type == "mod"){
+			return remove_sign(value%((scope-1)*range));
+
+		}
+		
 		
 		if(type == "cos"){
 			return remove_sign(Math.round(Math.cos(value/range)*(scope-1)));
@@ -137,6 +156,8 @@ function AL_Pepo(){
 		if(type == 'sin'){
 			return remove_sign(Math.round(Math.sin(value/range)*(scope-1)));
 		}
+		
+		
 		
 	}
 	
@@ -180,12 +201,35 @@ function AL_Pepo(){
 	}
 	
 	function get_input_peg(n){
-
+		
+		// RECURSIVE ! find the first PEG in the intput node tree 
+		
 		var numInput = node.numberOfInputPorts(n);
 		
-		var source = node.srcNode(n,numInput-1);
+		var first_parent = node.srcNode(n,numInput-1);
 		
-		return source;
+		var parents = [];
+		
+		parents.push(node.srcNode(n,numInput-1));
+		
+		for (var i = 0 ; i < parents.length ; i ++){
+			
+			var current_parent = parents[i];
+			
+			if(node.type(current_parent)=="PEG"){
+				
+				return current_parent;
+				
+			}else{
+				
+				numInput = node.numberOfInputPorts(n);
+				
+				parents.push(node.srcNode(current_parent,numInput-1));
+				
+			}
+			
+		}
+		
 
 	}
 	
@@ -193,7 +237,31 @@ function AL_Pepo(){
 
 	function get_output_read(n){
 		
-		return node.dstNode(n, 0, 0); 
+		// RECURSIVE ! find the first READ in the outputs node tree 
+		
+		//var read_list = []
+		
+		var childrens = []
+		
+		childrens.push(node.dstNode(n, 0, 0));
+		
+		for (var i = 0 ; i < childrens.length ; i ++){
+			
+			var current_child = childrens[i];
+			
+			if(node.type(current_child)=="READ"){
+				
+				return current_child;
+				
+			}else{
+				
+				childrens.push(node.dstNode(current_child, 0, 0));
+			}
+			
+		}
+		
+		//return read_list ; 
+
 		
 	}
 
@@ -222,17 +290,23 @@ function AL_Pepo(){
 }
 /*
 SCRIPT MODULE ATTRIBUTES 
+
+
 <specs>
   <ports>
     <in type="PEG"/>
     <out type="IMAGE"/>
   </ports>
   <attributes>
-<attr type="bool" name="isPepo" value="true"/> 
+<attr type="double" name="input_1" value="0"/> 
+<attr type="double" name="input_2" value="0"/> 
+<attr type="bool" name="isFupo" value="true"/> 
 <attr type="int" name="sensitivity" value="10"/> 
 <attr type="int" name="exposure" value="1"/> 
   </attributes>
 </specs>
+
+
 
 
 }*/
