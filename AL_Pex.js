@@ -1,5 +1,5 @@
 
-function AL_Pepo(){
+function AL_Pex(){
 	
 	
 	/*TODO : 
@@ -24,7 +24,7 @@ function AL_Pepo(){
 	
 	var all_script_nodes =  node.getNodes(['SCRIPT_MODULE']);
 	
-	var pepo_list = Array();
+	var Pex_list = Array();
 	
 	var current_frame = frame.current()
 	
@@ -41,18 +41,18 @@ function AL_Pepo(){
 	*/	
 	
 	
-	pepo_list = fetch_pepos(all_script_nodes);
+	Pex_list = fetch_Pexs(all_script_nodes);
 	
 	var frame_start = scene.getStartFrame ();
 	var frame_scope = scene.getStopFrame ();
 	
-	write_expo(pepo_list,GENERAL_SENSITIVITY,frame_start,frame_scope);
+	write_expo(Pex_list,GENERAL_SENSITIVITY,frame_start,frame_scope);
 	
 	/*
 	FUNCTION 
 	*/	
 		
-	function fetch_pepos(node_list){
+	function fetch_Pexs(node_list){
 		
 		var list = [];
 		
@@ -95,7 +95,7 @@ function AL_Pepo(){
 	*/
 	
 	
-	function treat_pepos(node_list,active_frame,general_SENSITIVITY){
+	function treat_Pexs(node_list,active_frame,general_SENSITIVITY){
 	
 		for(var n = 0 ; n < node_list.length ; n++){
 				
@@ -276,7 +276,7 @@ function AL_Pepo(){
 		 
 		for (var i = start_frame ; i < number_of_frames+1 ; i++){
 		
-			treat_pepos(node_list,i,range);
+			treat_Pexs(node_list,i,range);
 			
 		}
 		
@@ -377,11 +377,11 @@ function AL_Pepo(){
 		
 		
 
-		var ispepo = node.getTextAttr(n,current_frame,'isPepo');
+		var isPex = node.getTextAttr(n,current_frame,'isPex');
 		
-		MessageLog.trace(ispepo);
+		MessageLog.trace(isPex);
 		
-		if(ispepo == 'Y'){
+		if(isPex == 'Y'){
 			
 			check = true;
 		}
@@ -394,7 +394,9 @@ function AL_Pepo(){
 	
 }
 /*
-SCRIPT MODULE ATTRIBUTES 
+SCRIPT MODULE ATTRIBUTES : PEX 
+
+create script node ans paste this in the "Specifiactions" tab
 
 <specs>
   <ports>
@@ -402,7 +404,7 @@ SCRIPT MODULE ATTRIBUTES
     <out type="IMAGE"/>
   </ports>
   <attributes>
-<attr type="bool" name="isPepo" value="true"/> 
+<attr type="bool" name="isPex" value="true"/> 
 <attr type="double" name="input_1" value="0"/> 
 <attr type="double" name="input_2" value="0"/> 
 <attr type="double" name="sensitivity" value="10"/> 
